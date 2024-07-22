@@ -1,0 +1,67 @@
+#!/bin/bash
+#
+# A script to run the tool with all stages
+
+set -e
+
+print_usage() {
+  echo "Usage: $0 <tag1> <tag2> [-c clone_path] [-u repo_link] [-s subsystem]"
+  exit 1
+}
+
+# Ensure at least two positional parameters are provided
+if [ -z "$1" ] || [ -z "$2" ]; then
+  print_usage
+fi
+
+TAG1="$1"
+TAG2="$2"
+
+CLONE_PATH="linux"
+REPO_URL="https://github.com/gregkh/linux"
+SUBSYS=""
+
+# Shift positional parameters before processing options
+shift 2
+
+# Parse optional arguments
+while getopts 'c:u:s:' flag; do
+  case "${flag}" in
+    c) CLONE_PATH="${OPTARG}" ;;
+    u) REPO_URL="${OPTARG}" ;;
+    s) SUBSYS="${OPTARG}" ;;
+    *) print_usage
+       exit 1 ;;
+  esac
+done
+
+# Debug information
+echo "TAG1: $TAG1"
+echo "TAG2: $TAG2"
+echo "CLONE_PATH: $CLONE_PATH"
+echo "REPO_URL: $REPO_URL"
+echo "SUBSYS: $SUBSYS"
+# Determine if REPO_URL is a GitHub or GitLab URL
+if [[ "$REPO_URL" == "https://github"* ]]; then
+  REPO_TYPE="github"
+elif [[ "$REPO_URL" == "https://gitlab"* ]]; then
+  REPO_TYPE="gitlab"
+else
+  REPO_TYPE="Unknown"
+  echo "Error: The repository URL ($REPO_URL) is neither a GitHub nor a GitLab URL."
+  exit 1
+fi
+
+echo "Repository URL ($REPO_URL) is identified as: $REPO_TYPE"
+
+# Clone the repository
+if [ ! -d $CLONE_PATH/.git ]; then
+  git clone "$REPO_URL" $CLONE_PATH
+fi
+
+# Cleanup data before making analysis run (git clone is cleaned of changes in generate_build_filelists)
+[ -e "web_source_code" ] && rm -rf "web_source_code"
+[ -e "build_data" ] && rm -rf "build_data"
+
+./generate_build_filelists "$TAG1" "$TAG2" "$CLONE_PATH" "$SUBSYS"
+./generate_web_reports "$TAG1" "$TAG2" "$REPO_URL"
