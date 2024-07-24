@@ -2,7 +2,7 @@
 #
 # Fetch name email information for linux kernel contributors
 
-DEFAULT_TAG="v6.10"
+DEFAULT_TAG="v5.15.100"
 TAG="${1:-$DEFAULT_TAG}"
 git checkout "$TAG"
 

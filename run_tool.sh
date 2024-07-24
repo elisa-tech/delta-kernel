@@ -2,34 +2,53 @@
 #
 # A script to run the tool with all stages
 
-show_help() {
-    echo "Usage: ./run_tool.sh [tag1] [tag2]"
-    echo "Example: ./run_tool.sh v6.9 v6.10"
-    echo
-    echo "Options:"
-    echo "  tag1    Optional. Specify old_linux_version (default: $DEFAULT_TAG1)"
-    echo "  tag2    Optional. Specify new_linux_version (default: $DEFAULT_TAG2)"
-    echo "  -h      Display this help message"
-    exit 0
-}
-
-if [[ "$1" == "-h" ]]; then
-    show_help
+# Ensure required arguments (tag1 and tag2) are provided
+if [ -z "$1" ] || [ -z "$2" ]; then
+  echo "Usage: $0 <tag1> <tag2> [clone_path] [linux_repo_root_url]"
+  exit 1
 fi
 
-DEFAULT_TAG1="v6.9"
-DEFAULT_TAG2="v6.10"
-TAG1="${1:-$DEFAULT_TAG1}"
-TAG2="${2:-$DEFAULT_TAG2}"
-DEFAULT_CLONE_PATH="linux-clone"
-CLONE_PATH="${3:-$DEFAULT_CLONE_PATH}"
+TAG1="$1"
+TAG2="$2"
 
-# Define the repository URL and the target directory
-REPO_URL="https://github.com/gregkh/linux"
+# Optional arguments
+# Default values
+DEFAULT_CLONE_PATH="linux-clone"
+DEFAULT_LINUX_REPO_URL="https://github.com/gregkh/linux"
+
+# Check the number of arguments and set optional parameters accordingly
+if [ -n "$3" ] && [ -n "$4" ]; then
+  CLONE_PATH="$3"
+  REPO_URL="$4"
+elif [ -n "$3" ] && [[ "$3" == *"github.com"* || "$3" == *"gitlab.com"* ]]; then
+  CLONE_PATH="$DEFAULT_CLONE_PATH"
+  REPO_URL="$3"
+elif [ -n "$3" ]; then
+  CLONE_PATH="$3"
+  REPO_URL="$DEFAULT_LINUX_REPO_URL"
+else
+  CLONE_PATH="$DEFAULT_CLONE_PATH"
+  REPO_URL="$DEFAULT_LINUX_REPO_URL"
+fi
+
+# Determine if REPO_URL is a GitHub or GitLab URL
+if [[ "$REPO_URL" == "https://github"* ]]; then
+  REPO_TYPE="github"
+elif [[ "$REPO_URL" == "https://gitlab"* ]]; then
+  REPO_TYPE="gitlab"
+else
+  REPO_TYPE="Unknown"
+  echo "Error: The repository URL ($REPO_URL) is neither a GitHub nor a GitLab URL."
+  exit 1
+fi
+
+echo "Repository URL ($REPO_URL) is identified as: $REPO_TYPE"
+
 TARGET_DIR="linux/scripts/change-impact-tools"
 
 # Clone the repository
-git clone $REPO_URL
+git clone "$REPO_URL"
+
 
 # Create the target directory if it doesn't exist
 mkdir -p $TARGET_DIR
@@ -50,10 +69,11 @@ CUR_DIR=$(pwd)
 # Navigate to the target directory and execute the scripts
 cd "$TARGET_DIR" || exit
 ./generate_build_filelists.sh "$TAG1" "$TAG2" "$CLONE_PATH"
-./generate_web_reports.sh "$TAG1" "$TAG2"
+./generate_web_reports.sh "$TAG1" "$TAG2" "$REPO_URL" # fix later
 
 # Return to the original directory
 cd "$CUR_DIR" || exit
 
 # Copy the web source code to the current directory
 cp -r $TARGET_DIR/web_source_code .
+cp -r $TARGET_DIR/build_data .

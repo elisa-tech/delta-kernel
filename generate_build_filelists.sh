@@ -5,11 +5,12 @@
 
 show_help() {
     echo "Usage: ./generate_build_filelists.sh [tag1] [tag2]"
-    echo "Example: ./generate_rugenerate_build_filelistsntime_web_reports.sh tag1 tag2"
+    echo "Example: ./generate_rugenerate_build_filelists.h tag1 tag2 clone_path"
     echo
     echo "Options:"
-    echo "  tag1    Optional. Specify tag1 (default: $DEFAULT_TAG1)"
-    echo "  tag2    Optional. Specify tag2 (default: $DEFAULT_TAG2)"
+    echo "  tag1    Required. old_tag."
+    echo "  tag2    Required. new_tag."
+    echo "  clone_path Requred. the path to clone the linux repo to apply change diff analysis."
     echo "  -h      Display this help message"
     exit 0
 }
@@ -62,12 +63,15 @@ if [[ "$1" == "-h" ]]; then
     show_help
 fi
 
-DEFAULT_TAG1="v6.9"
-DEFAULT_TAG2="v6.10"
-TAG1="${1:-$DEFAULT_TAG1}"
-TAG2="${2:-$DEFAULT_TAG2}"
-DEFAULT_CLONE_PATH="linux-clone"
-CLONE_PATH="${3:-$DEFAULT_CLONE_PATH}"
+# Ensure required arguments (tag1 and tag2) are provided
+if [ -z "$1" ] || [ -z "$2" ] || [ -z "$3" ]; then
+  echo "Usage: $0 <tag1> <tag2> <clone_path>"
+  exit 1
+fi
+
+TAG1="$1"
+TAG2="$2"
+CLONE_PATH="$3"
 
 mkdir -p "build_data"
 

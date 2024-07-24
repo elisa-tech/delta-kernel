@@ -5,8 +5,8 @@
 
 set -e
 
-DEFAULT_TAG1="v6.9"
-DEFAULT_TAG2="v6.10"
+DEFAULT_TAG1="v5.15"
+DEFAULT_TAG2="v5.15.100"
 TAG1="${TAG1_ENV:-$DEFAULT_TAG1}"
 TAG2="${TAG2_ENV:-$DEFAULT_TAG2}"
 
@@ -51,10 +51,9 @@ parse_source_json_file() {
     local python_path="$root_path/scripts/change-impact-tools/build_scripts/parse_json.py"
     # shellcheck disable=SC2154
     local cloned_repo_name="/$clone_dir/"
-    local input_path="$root_path/scripts/clang-tools/compile_commands.json"
+    local input_path="$root_path/scripts/change-impact-tools/build_data/compile_commands.json"
     local output_path="$root_path/scripts/change-impact-tools/build_data/sourcefile.txt"
 
-    display_file_head "$root_path/scripts/clang-tools" "compile_commands.json" 3
     python3 "$python_path" "$cloned_repo_name" "$input_path" "$output_path"
     display_file_head "$root_path/scripts/change-impact-tools/build_data" "sourcefile.txt" 3
 }
@@ -62,7 +61,7 @@ parse_source_json_file() {
 # generate the build file list after building the kernel
 generate_compiled_file_lists() {
     # Generate compiled source files list
-    local json_output_path="$root_path/scripts/clang-tools/compile_commands.json"
+    local json_output_path="$root_path/scripts/change-impact-tools/build_data/compile_commands.json"
     echo "path check: $(pwd)"
     python3 scripts/clang-tools/gen_compile_commands.py -o "$json_output_path"
 
