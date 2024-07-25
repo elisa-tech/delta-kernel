@@ -1,9 +1,9 @@
 #!/bin/bash
 #
 # Fetch name email information for linux kernel contributors
+set -e
 
-DEFAULT_TAG="v5.15.100"
-TAG="${1:-$DEFAULT_TAG}"
+TAG="$1"
 git checkout "$TAG"
 
 echo "Starting to generate the email name list ..."

@@ -26,18 +26,10 @@ echo "Repository URL ($REPO_URL) is identified as: $REPO_TYPE"
 
 # Generate front-end commit info metadata
 echo "Generating source_data.js ..."
-if [ ! -f "build_data/tokenize_source.json" ]; then
-  echo "Error: build_data/tokenize_source.json not found!"
-  exit 1
-fi
 TOKEN_DATA_SOURCE=$(cat build_data/tokenize_source.json)
 echo "let token_data_source = $TOKEN_DATA_SOURCE;" > web_source_code/source_data.js
 
 echo "Generating header_data.js ..."
-if [ ! -f "build_data/tokenize_header.json" ]; then
-  echo "Error: build_data/tokenize_header.json not found!"
-  exit 1
-fi
 TOKEN_DATA_HEADER=$(cat build_data/tokenize_header.json)
 echo "let token_data_header = $TOKEN_DATA_HEADER;" > web_source_code/header_data.js
 
@@ -60,12 +52,10 @@ echo "let diffs_header = \`
 $HEADER_TRIM_ESCAPED
 \`.trim();" > web_source_code/git_diff_header.js
 
-
-cat <<EOF > web_source_code/versions.js
-let tag1 = "$TAG1";
-let tag2 = "$TAG2";
-let root_linux_url = "$REPO_URL";
-let repo_type = "$REPO_TYPE";
-EOF
+echo "tag1=\"$TAG1\"" > web_source_code/versions.js
+# shellcheck disable=SC2129
+echo "tag2=\"$TAG2\"" >> web_source_code/versions.js
+echo "root_linux_url=\"$REPO_URL\"" >> web_source_code/versions.js
+echo "repo_type=\"$REPO_TYPE\"" >> web_source_code/versions.js
 
 echo "SUCCESS generated metadata js files"

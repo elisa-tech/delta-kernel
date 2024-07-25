@@ -33,8 +33,13 @@ cd <repository_directory>
 Execute the tool by specifying the old and new tags:
 
 ```bash
-./run_tool.sh <old_tag> <new_tag>
+./run_tool.sh <tag1> <tag2> [-c clone_path] [-u repo_link] [-s subsystem]
 ```
+- `<tag1>`: Specifies the old version tag.
+- `<tag2>`: Specifies the new version tag.
+- `-c <clone_path>`: Optional. Defines the user-specified path to clone the Linux source code repository.
+- `-u <repo_link>`: Optional. Provides the URL for the Linux source code repository.
+- `-s <subsystem>`: Optional. Specifies the subsystem for analysis (e.g., -s security).
 
 ## Files Generated
 

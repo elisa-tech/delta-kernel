@@ -24,7 +24,7 @@ OBJECT_ID_REGEX = r'^@@ -\d+,\d+ \+(?P<n3>\d+),(?P<n4>\d+) @@'
 diff_info = {}
 
 
-def run_git_command(arguments):
+def run_command(arguments):
     """Run git command in python."""
     result = subprocess.run(arguments, capture_output=True,
                             text=True, check=True)
@@ -70,7 +70,7 @@ def get_log_line(tag1, tag2, line_num, file_path, git_blame):
     else:
         command = ['git', 'log', f'{tag1}..{tag2}',
                    f'-L{line_num},{line_num}:{file_path}']
-    log_commit_info = run_git_command(command)
+    log_commit_info = run_command(command)
     return log_commit_info.splitlines()  # Split the output into lines
 
 

@@ -2,6 +2,8 @@
 #
 # Generate the web report source codes (*.html and *.js) for the web report
 
+set -e
+
 function show_help {
     echo "Usage: ./generate_build_web_reports.sh [tag1] [tag2] [linux_repo_root_url]"
     echo "Example: ./generate_build_web_reports.sh tag1 tag2 linux_url"

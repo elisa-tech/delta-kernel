@@ -3,6 +3,8 @@
 # This script compiles kernel and collects a list of complite-time files and related Git metadata
 # for each newly added line from tag 1 to tag 2.
 
+set -e
+
 show_help() {
     echo "Usage: ./generate_build_filelists.sh [tag1] [tag2]"
     echo "Example: ./generate_rugenerate_build_filelists.h tag1 tag2 clone_path"
@@ -72,7 +74,7 @@ fi
 TAG1="$1"
 TAG2="$2"
 CLONE_PATH="$3"
-
+SUBSYS="$4"
 mkdir -p "build_data"
 
 curr_dir=$(pwd)
@@ -81,7 +83,7 @@ export curr_dir
 
 clone_and_goto_cloned_repo "$CLONE_PATH"
 
-bash "$curr_dir"/build_scripts/build_collect_diff.sh "$TAG1" "$TAG2"
+bash "$curr_dir"/build_scripts/build_collect_diff.sh "$TAG1" "$TAG2" "$SUBSYS"
 echo "Finishing generating build source file lists"
 
 # Fetch email and name pairing information for linux contributor

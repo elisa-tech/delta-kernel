@@ -216,12 +216,16 @@
                     fileCell.colSpan = 2;
 
                     // Extract GitHub URL for the file
-                    const fileUrl = `https://github.com/gregkh/linux/blob/master/${diff.fileName}`;
-
+                    let fileUrl;
+                    if (repo_type == "gitlab") {
+                        fileUrl = `${root_linux_url}/-/blob/${tag2}/${diff.fileName}`;
+                    } else {
+                        fileUrl = `${root_linux_url}/blob/${tag2}/${diff.fileName}`;
+                    }
                     // Update the file row with URL
                     fileCell.innerHTML = `
                         <strong>${diff.fileName}</strong>
-                        <a href="${fileUrl}" target="_blank" class="file-link">View on GitHub</a>
+                        <a href="${fileUrl}" target="_blank" class="file-link">Link</a>
                         <button class="toggle-btn" onclick="toggleFile('${fileId}')">
                             <span class="triangle triangle-down"></span>
                         </button>

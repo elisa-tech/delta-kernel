@@ -5,11 +5,6 @@
 
 set -e
 
-DEFAULT_TAG1="v5.15"
-DEFAULT_TAG2="v5.15.100"
-TAG1="${TAG1_ENV:-$DEFAULT_TAG1}"
-TAG2="${TAG2_ENV:-$DEFAULT_TAG2}"
-
 # check and install gcc-11 if not already installed
 install_package_safe() {
     if ! command -v gcc-11 &> /dev/null; then
@@ -102,19 +97,23 @@ generate_git_diff() {
     else
         echo "[generate_git_diff] Generating source git diff report ..."
     fi
-
+    echo "parsing for subsys: $SUBSYS"
     while IFS= read -r file
     do
-        if git show "$TAG2:$file" &> /dev/null; then
-            local diff_result
-            diff_result=$(git diff "$TAG1" "$TAG2" -- "$file")
-            if [[ -n "$diff_result" ]]; then
-                {
-                    echo "Diff for $file"
-                    echo "$diff_result"
-                    echo ""
-                } >> "$diff_output"
+        if [[ "$file" == $SUBSYS/* ]]; then
+            echo "now generating git diff for $file"
+            if git show "$TAG2:$file" &> /dev/null; then
+                local diff_result
+                echo "$file suitable for parse"
+                diff_result=$(git diff "$TAG1" "$TAG2" -- "$file")
+                if [[ -n "$diff_result" ]]; then
+                    {
+                        echo "Diff for $file"
+                        echo "$diff_result"
+                        echo ""
+                    } >> "$diff_output"
 
+                fi
             fi
         fi
     done < "$diff_input"
@@ -123,10 +122,10 @@ generate_git_diff() {
 }
 
 
-if [ $# -eq 2 ]; then
-    TAG1="$1"
-    TAG2="$2"
-fi
+TAG1="$1"
+TAG2="$2"
+SUBSYS="$3"
+echo "build and collect kernel for subsystem: $SUBSYS"
 
 # Fetch tags from the repository
 git fetch --tags
@@ -151,10 +150,13 @@ echo "finished compile kernel using gcc 11"
 
 
 # Collect build metadata
+echo "starting on preparing compiled file list"
 generate_compiled_file_lists
 
 # Generate git diff report
+echo "starting on generating git diff report on source"
 generate_git_diff source
+echo "starting on generating git diff report on header"
 generate_git_diff header
 
 # Clean up the working directory
