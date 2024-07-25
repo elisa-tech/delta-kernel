@@ -1,11 +1,7 @@
 # Change-impact-analysis Tool
-
-The Change Impact Analysis Tool generates a comprehensive visual report detailing changes in both header files and source code between two Linux versions (tags in the Linux kernel repository: old_tag and new_tag). This tool helps developers view updates from the old version.
-
-The diff report includes a subset of files from the Linux repository that are included in building the kernel, contributing to a focused and detailed report on the compile-time source code in Linux.
-
 ## Table of Content
-
+- [Introduction](#introduction)
+- [Innovation](#innovation)
 - [How to Use](#how-to-use)
 - [Files Generated](#files-generated)
 - [Structure of the Tool](#structure-of-the-tool)
@@ -13,6 +9,20 @@ The diff report includes a subset of files from the Linux repository that are in
   - [II. Git Diff Report Generation](#ii-git-diff-report-generation)
   - [III. Commit Metadata Retrieval](#iii-commit-metadata-retrieval)
   - [IV. Web Script Generation](#iv-web-script-generation)
+
+## Introduction
+
+The Change Impact Analysis Tool generates a comprehensive visual report detailing changes in both header files and source code between two Linux versions (tags in the Linux kernel repository: old_tag and new_tag). This tool helps developers view updates from the old version.
+
+The diff report includes a subset of files from the Linux repository that are included in building the kernel, contributing to a focused and detailed report on the compile-time source code in Linux.
+
+## Innovation
+The idea of generating a web display for Linux kernel version change impact analysis is inspired by [Cregit](https://github.com/cregit/cregit). This tool innovates on Cregit by:
+
+- Considering the extensive code space the Linux kernel deals with, it provides a compile-time analysis instead of a static analysis of the commit history of the Linux kernel, presenting changes only in files used during compilation. 
+- Generating not only web source files but also lists of all source files and dependencies/header files used in kernel compilation, facilitating additional analysis purposes. (More details in [Files Generated](#files-generated))
+- Enabling comparison between two specific tags/releases in the Linux kernel, highlighting all newly added and deleted lines. This provides a clear layout of differences between the tags. While Cregit organizes information by files and embeds the latest commit details in each line/token, it does not support direct comparison between two tags.
+- User customization: allows users to define the URL of the Linux root repository and specify the subsystem for analysis. (More details in [How to Use](#how-to-use))
 
 ## How to use
 
