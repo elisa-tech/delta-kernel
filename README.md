@@ -1,5 +1,7 @@
-# Change-impact-analysis Tool
+# DeltaKernel Change Impact Analysis Tool
+
 ## Table of Content
+
 - [Introduction](#introduction)
 - [Innovation](#innovation)
 - [How to Use](#how-to-use)
@@ -12,11 +14,12 @@
 
 ## Introduction
 
-The Change Impact Analysis Tool generates a comprehensive visual report detailing changes in both header files and source code between two Linux versions (tags in the Linux kernel repository: old_tag and new_tag). This tool helps developers view updates from the old version.
+DeltaKernel Change Impact Analysis Tool generates a comprehensive visual report detailing changes in both header files and source code between two Linux versions (tags in the Linux kernel repository: old_tag and new_tag). This tool helps developers view updates from the old version.
 
 The diff report includes a subset of files from the Linux repository that are included in building the kernel, contributing to a focused and detailed report on the compile-time source code in Linux.
 
 ## Innovation
+
 The idea of generating a web display for Linux kernel version change impact analysis is inspired by [Cregit](https://github.com/cregit/cregit). This tool innovates on Cregit by:
 
 - Considering the extensive code space the Linux kernel deals with, it provides a compile-time analysis instead of a static analysis of the commit history of the Linux kernel, presenting changes only in files used during compilation. 
@@ -44,6 +47,13 @@ Execute the tool by specifying the old and new tags:
 
 ```bash
 ./run_tool.sh <tag1> <tag2> [-c clone_path] [-u repo_link] [-s subsystem]
+```
+
+Example Usage:
+```bash
+./run_tool.sh "v6.8" "v6.9" -c "linux-clone" -u "https://github.com/torvalds/linux" -s "security"
+# the tool will generate web update report on linux kernel v6.9 from v6.8 for security subsystem. 
+# the linux repository will be cloned during tool execution and will be cloned into a folder named linux-clone. 
 ```
 - `<tag1>`: Specifies the old version tag.
 - `<tag2>`: Specifies the new version tag.
@@ -76,7 +86,7 @@ The tool operates through a structured process to generate a comprehensive chang
 
 During linux kernel compilation, `Makefile.build` calls `$K/scripts/basic/fixdep.c` to generate a .cmd file for each source that collects dependency information during compilation.
 
-This tool incorporates a modification that applies a patch (`patch.file`) to `scripts/basic/fixdep.c`, enabling it to output dependency information into a **list of header files** when building the kernel.
+The `scripts/basic/fixdep.c` file generates a `.cmd` file containing dependency information for each source file that the kernel compiles. This tool includes a modification that applies a patch (fixdep-patch.file) to `fixdep.c`, enabling it to collect dependency files for each source file and output a comprehensive list of all source files and their dependencies for the entire kernel compilation. The resulting `dependency_list.txt`` is generated after kernel compilation.
 
 #### Source code
 

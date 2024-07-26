@@ -7,12 +7,6 @@ set -e
 
 # check and install gcc-11 if not already installed
 install_package_safe() {
-    if ! command -v gcc-11 &> /dev/null; then
-        sudo apt update
-        sudo apt install gcc-11
-    else
-        echo "GCC-11 is already installed."
-    fi
     if ! command -v libssl-dev &> /dev/null; then
         sudo apt-get update
         sudo apt-get install -y libssl-dev
@@ -145,7 +139,7 @@ echo "the current os-linux version: "
 cat /etc/os-release
 
 echo "start running make"
-make HOSTCC=gcc-11 CC=gcc-11
+make 
 echo "finished compile kernel using gcc 11"
 
 

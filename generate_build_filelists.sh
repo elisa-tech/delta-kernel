@@ -107,8 +107,8 @@ display_file_head "$curr_dir/build_data" "filtered_diff_source_replace.txt" 3
 # Retrieve and tokenize commit info per added line
 echo "tokenizing each commit line ..."
 git checkout "$TAG2"
-python3 "$curr_dir"/build_scripts/tokenize.py "$curr_dir/build_data/filtered_diff_header.txt" "$curr_dir/build_data/parse_git_header.json" "$curr_dir/build_data/tokenize_header.json" "$TAG1" "$TAG2"
-python3 "$curr_dir"/build_scripts/tokenize.py "$curr_dir/build_data/filtered_diff_source.txt" "$curr_dir/build_data/parse_git_source.json" "$curr_dir/build_data/tokenize_source.json" "$TAG1" "$TAG2"
+python3 "$curr_dir"/build_scripts/tokenize.py "$curr_dir/build_data/filtered_diff_header.txt" "$curr_dir/build_data/tokenize_header.json" "$TAG1" "$TAG2"
+python3 "$curr_dir"/build_scripts/tokenize.py "$curr_dir/build_data/filtered_diff_source.txt" "$curr_dir/build_data/tokenize_source.json" "$TAG1" "$TAG2"
 display_file_head "$curr_dir/build_data" "tokenize_source.json" 3
 display_file_head "$curr_dir/build_data" "tokenize_header.json" 3
 echo "finished tokenization"

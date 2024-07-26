@@ -15,8 +15,9 @@ import re
 import json
 import argparse
 from datetime import datetime
+import tempfile
 
-CHUNK_HEADER_PATTERN = r'^@@ -\d+,\d+ \+(\d+),\d+ @@'
+CHUNK_HEADER_PATTERN = r'^@@ -\d+,\d+ \+(\d+),\d+ f@@'
 COMMIT_REGEX = r'^commit ([0-9a-f]{40})$'
 AUTHOR_REGEX = r'^Author: (.+)$'
 DATE_REGEX = r'^Date:\s+(.+)$'
@@ -301,8 +302,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Process some files.')
     parser.add_argument('git_diff_report', type=str,
                         help='Path to git_diff_report.txt')
-    parser.add_argument('intermediate_file', type=str,
-                        help='Path to intermediate_file')
     parser.add_argument('output_file', type=str, help='Path to output_file')
     parser.add_argument('tag1', type=str, help='old version tag')
     parser.add_argument('tag2', type=str, help='new verison tag')
@@ -310,10 +309,13 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     git_diff_report_path = args.git_diff_report
-    intermediate_file_path = args.intermediate_file
     output_file_path = args.output_file
     TAG1 = args.tag1
     TAG2 = args.tag2
+
+    # Create a temporary file and get its path
+    temp_file = tempfile.NamedTemporaryFile(delete=False)
+    intermediate_file_path = temp_file.name
 
     # Identify all the (line number in git diff report)
     added_lines = parse(git_diff_report_path)
@@ -329,3 +331,4 @@ if __name__ == '__main__':
     print("starting tokenize function test", flush=True)
     tokenize(intermediate_file_path, output_file_path)
     print("Result exported to tokenize.json", flush=True)
+    os.remove(intermediate_file_path)
