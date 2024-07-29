@@ -5,8 +5,8 @@
 - [Introduction](#introduction)
 - [Innovation](#innovation)
 - [How to Use](#how-to-use)
-- [Files Generated](#files-generated)
-- [Structure of the Tool](#structure-of-the-tool)
+- [Intermediate Files Generated](#intermediate-files-generated)
+- [Operation Stages of the Tool](#operation-stages-of-the-tool)
   - [I. Compilation File List Generation](#i-compilation-file-list-generation)
   - [II. Git Diff Report Generation](#ii-git-diff-report-generation)
   - [III. Commit Metadata Retrieval](#iii-commit-metadata-retrieval)
@@ -23,7 +23,7 @@ The diff report includes a subset of files from the Linux repository that are in
 The idea of generating a web display for Linux kernel version change impact analysis is inspired by [Cregit](https://github.com/cregit/cregit). This tool innovates on Cregit by:
 
 - Considering the extensive code space the Linux kernel deals with, it provides a compile-time analysis instead of a static analysis of the commit history of the Linux kernel, presenting changes only in files used during compilation.
-- Generating not only web source files but also lists of all source files and dependencies/header files used in kernel compilation, facilitating additional analysis purposes. (More details in [Files Generated](#files-generated))
+- Generating not only web source files but also lists of all source files and dependencies/header files used in kernel compilation, facilitating additional analysis purposes. (More details in [Intermediate Files Generated](#intermediate-files-generated))
 - Enabling comparison between two specific tags/releases in the Linux kernel, highlighting all newly added and deleted lines. This provides a clear layout of differences between the tags. While Cregit organizes information by files and embeds the latest commit details in each line/token, it does not support direct comparison between two tags.
 - User customization: allows users to define the URL of the Linux root repository and specify the subsystem for analysis. (More details in [How to Use](#how-to-use))
 
@@ -53,18 +53,20 @@ cd <repository_directory>
 
 ```bash
 ./run_tool "v6.8" "v6.9" -c "linux-clone" -u "https://github.com/torvalds/linux" -s "security"
-# the tool will generate web update report on linux kernel v6.9 from v6.8 for security subsystem. 
-# the linux repository will be cloned during tool execution and will be cloned into a folder named linux-clone. 
+# the tool will generate web update report on linux kernel v6.9 from v6.8 for security subsystem.
+cd web_source_code # click on index.html to view the result 
 ```
 
 **Command Line Arguments**:
+
 - `<tag1>`: Specifies the old version tag.
 - `<tag2>`: Specifies the new version tag.
-- `c <clone_name>`: Optional. Defines the user-specified repo name to clone the Linux source code repository. Default is linux-clone.
+- `c <clone_name>`: Optional. Defines the user-specified repo name to clone the Linux source code repository. Default is linux-clone. `delta-kernel` should be located in `$K/scripts/change-impact-tools`. To preserve `change-impact-tools/` while checking out different tags, `linux-clone` simulates changes without affecting `change-impact-tools/`.
 - `u <repo_link>`: Optional. Provides the URL for the Linux source code repository.
 - `s <subsystem>`: Optional. Specifies the subsystem for analysis (e.g., -s security).
 
 **What the Tool Does**:
+
 - Clones the Linux repository from `repo_link`.
 - Copies `/delta-kernel/*` into `linux/scripts/change-impact-tools/`.
 - Clones the Linux repository into another repository named `clone_name`, defaulting to `linux-clone`.
@@ -76,19 +78,28 @@ cd <repository_directory>
   - Cleans up the working directory in `linux-clone`.
   - Retrieves git metadata for each file inside the lists.
   - Copies file lists, git diff reports, and git metadata (`build_data/`) to `/delta-kernel`.
+**linux-clone**
+After execution, `linux-clone` will be in the branch of `tag2`.
 
-**Usage of `linux-clone`**:
-`delta-kernel` is assumed to be a directory located in `$K/scripts/change-impact-tools`. To avoid removing the `change-impact-tools/` directory while checking out different tags, linux-clone is created to simulate changes without affecting `change-impact-tools/``.
+If a runtime git conflict is encountered, resolve it with the following steps:
+
+```bash
+cd linux-clone # or user-defined clone name
+git reset --hard
+git checkout master
+cd .. # return to delta-kernel
+./run_tool # the cloned repository will not be re-cloned
+```
 
 **Clean Up (Optional)**:
 
 ```bash
 rm -r linux
-rm -r linux-clone # or where you place the cloned dir
+rm -r linux-clone # or how you name the cloned dir
 rm -r build_data
 ```
 
-## Files Generated
+## Intermediate Files Generated
 
 **/build_data:**
 
@@ -99,11 +110,7 @@ rm -r build_data
 - `tokenize_header.json` - Metadata for commit git diff for dependency files
 - `tokenize_source.json` - Metadata for commit git diff for source files
 
-**/web_source_codes:**
-
-- `index.html` - Click on to view the result
-
-## Structure of the Tool
+## Operation Stages of the Tool
 
 The tool operates through a structured process to generate a comprehensive change impact analysis report. Here's a detailed breakdown of its operation:
 
