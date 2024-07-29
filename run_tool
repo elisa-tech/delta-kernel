@@ -4,12 +4,14 @@
 
 set -e
 
+print_usage() {
+  echo "Usage: $0 <tag1> <tag2> [-c clone_path] [-u repo_link] [-s subsystem]"
+  exit 1
+}
 
 # Ensure at least two positional parameters are provided
 if [ -z "$1" ] || [ -z "$2" ]; then
-  echo "Usage: $0 <tag1> <tag2> [-c clone_path] [-u repo_link] [-s subsystem]"
-  echo "error"
-  exit 1
+  print_usage
 fi
 
 TAG1="$1"
@@ -18,10 +20,6 @@ TAG2="$2"
 CLONE_PATH="linux-clone"
 REPO_URL="https://github.com/gregkh/linux"
 SUBSYS=""
-
-print_usage() {
-  echo "Usage: $0 <tag1> <tag2> [-c clone_path] [-u repo_link] [-s subsystem]"
-}
 
 # Shift positional parameters before processing options
 shift 2

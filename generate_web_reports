@@ -21,8 +21,7 @@ fi
 
 # Ensure required arguments (tag1 and tag2) are provided
 if [ -z "$1" ] || [ -z "$2" ] || [ -z "$3" ]; then
-  echo "Usage: $0 <tag1> <tag2> <linux_repo_root_url>"
-  exit 1
+    show_help
 fi
 
 TAG1="$1"

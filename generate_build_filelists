@@ -6,7 +6,7 @@
 set -e
 
 show_help() {
-    echo "Usage: ./generate_build_filelists [tag1] [tag2]"
+    echo "Usage: ./generate_build_filelists [tag1] [tag2] [clone-path]"
     echo "Example: ./generate_rugenerate_build_filelists.h tag1 tag2 clone_path"
     echo
     echo "Options:"
@@ -67,8 +67,7 @@ fi
 
 # Ensure required arguments (tag1 and tag2) are provided
 if [ -z "$1" ] || [ -z "$2" ] || [ -z "$3" ]; then
-  echo "Usage: $0 <tag1> <tag2> <clone_path>"
-  exit 1
+    show_help
 fi
 
 TAG1="$1"
