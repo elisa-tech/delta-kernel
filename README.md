@@ -142,7 +142,7 @@ Based on the git diff reports, the tool retrieves commit metadata for each newly
 
 Using the git diff reports and metadata stored in JSON files, the tool generates a web report displaying the changes.
 
-The web report contains three source html:
+The web report contains three html files:
 
 - `index.html`: with on-click directions to:
   - `sourcecode.html`: renders the content in source diff report, with embedded url and on-hover metadata box for each newly added lines/tokens in new_tag.
