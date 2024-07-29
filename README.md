@@ -14,7 +14,7 @@
 
 ## Introduction
 
-DeltaKernel Change Impact Analysis Tool generates a comprehensive visual report detailing changes in both header files and source code between two Linux versions (tags in the Linux kernel repository: old_tag and new_tag). This tool helps developers view updates from the old version.
+DeltaKernel Change Impact Analysis Tool generates a visual report detailing changes in both header files and source code between two Linux kernel versions (tags in the Linux kernel repository: old_tag and new_tag). This tool helps developers compare updates between versions.
 
 The diff report includes a subset of files from the Linux repository that are included in building the kernel, contributing to a focused and detailed report on the compile-time source code in Linux.
 
