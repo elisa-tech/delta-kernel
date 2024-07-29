@@ -69,7 +69,7 @@ generate_compiled_file_lists() {
 
 }
 
-# clean up the working directory
+# clean up the working directory in linux-clone
 cleanup_working_directory() {
     git reset --hard
     git clean -fdx
