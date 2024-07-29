@@ -37,13 +37,13 @@ apply_patch() {
 
 # parse the JSON file
 parse_source_json_file() {
-    local python_path="$root_path/scripts/change-impact-tools/build_scripts/parse_json.py"
+    local python_path="$root_path/scripts/change-impact-tools/build_scripts/parse_json"
     # shellcheck disable=SC2154
     local cloned_repo_name="/$clone_dir/"
     local input_path="$root_path/scripts/change-impact-tools/build_data/compile_commands.json"
     local output_path="$root_path/scripts/change-impact-tools/build_data/sourcefile.txt"
 
-    python3 "$python_path" "$cloned_repo_name" "$input_path" "$output_path"
+    ./"$python_path" "$cloned_repo_name" "$input_path" "$output_path"
     display_file_head "$root_path/scripts/change-impact-tools/build_data" "sourcefile.txt" 3
 }
 
@@ -52,7 +52,7 @@ generate_compiled_file_lists() {
     # Generate compiled source files list
     local json_output_path="$root_path/scripts/change-impact-tools/build_data/compile_commands.json"
     echo "path check: $(pwd)"
-    python3 scripts/clang-tools/gen_compile_commands.py -o "$json_output_path"
+    ./scripts/clang-tools/gen_compile_commands -o "$json_output_path"
 
     parse_source_json_file
     echo "source compiled filelist generated to sourcefile.txt"
@@ -62,9 +62,9 @@ generate_compiled_file_lists() {
     local output_list="$root_path/scripts/change-impact-tools/build_data/headerfile.txt"
     local output_json="$root_path/scripts/change-impact-tools/build_data/source_dep.json"
     local dep_path="dependency_file.txt"
-    local python_tool_path="$root_path/scripts/change-impact-tools/build_scripts/parse_dep_list.py"
+    local python_tool_path="$root_path/scripts/change-impact-tools/build_scripts/parse_dep_list"
 
-    python3 "$python_tool_path" "$dep_path" "$output_json" "$output_list"
+    ./"$python_tool_path" "$dep_path" "$output_json" "$output_list"
     echo "dependency compiled filelist generated to headerfile.txt$"
 
 }

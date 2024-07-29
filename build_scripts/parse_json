@@ -1,7 +1,8 @@
+#!/usr/bin/python3
 """
 The script collects a list of compile-time source files.
 
-Running `$K/scripts/clang-tools/gen_compile_commands.py` post kernel build
+Running `$K/scripts/clang-tools/gen_compile_commands` post kernel build
 generates `compile_commands.json`.
 
 This file is created by parsing `.cmd` files to collect all metadata for the
@@ -16,7 +17,7 @@ This script takes three arguments:
 3. The output path for the list of source files.
 
 Usage:
-    parse_json.py <linux_repo_root_path> <path_to_compile_commands.json>
+    parse_json <linux_repo_root_path> <path_to_compile_commands.json>
                   <output_path_source_file_list>
 """
 

@@ -5,8 +5,8 @@
 set -e
 
 function show_help {
-    echo "Usage: ./generate_build_web_reports.sh [tag1] [tag2] [linux_repo_root_url]"
-    echo "Example: ./generate_build_web_reports.sh tag1 tag2 linux_url"
+    echo "Usage: ./generate_build_web_reports [tag1] [tag2] [linux_repo_root_url]"
+    echo "Example: ./generate_build_web_reports tag1 tag2 linux_url"
     echo
     echo "Options:"
     echo "  tag1    Required: old_linux_version [e.g. v6.8]"
@@ -29,6 +29,6 @@ TAG1="$1"
 TAG2="$2"
 REPO_URL="$3"
 
-./web_scripts/generate_data.sh "$TAG1" "$TAG2" "$REPO_URL"
+./web_scripts/generate_data "$TAG1" "$TAG2" "$REPO_URL"
 
 echo "finishing generating webpage, report can be viewed in web_source_code/index.html"

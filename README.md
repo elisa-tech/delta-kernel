@@ -22,7 +22,7 @@ The diff report includes a subset of files from the Linux repository that are in
 
 The idea of generating a web display for Linux kernel version change impact analysis is inspired by [Cregit](https://github.com/cregit/cregit). This tool innovates on Cregit by:
 
-- Considering the extensive code space the Linux kernel deals with, it provides a compile-time analysis instead of a static analysis of the commit history of the Linux kernel, presenting changes only in files used during compilation. 
+- Considering the extensive code space the Linux kernel deals with, it provides a compile-time analysis instead of a static analysis of the commit history of the Linux kernel, presenting changes only in files used during compilation.
 - Generating not only web source files but also lists of all source files and dependencies/header files used in kernel compilation, facilitating additional analysis purposes. (More details in [Files Generated](#files-generated))
 - Enabling comparison between two specific tags/releases in the Linux kernel, highlighting all newly added and deleted lines. This provides a clear layout of differences between the tags. While Cregit organizes information by files and embeds the latest commit details in each line/token, it does not support direct comparison between two tags.
 - User customization: allows users to define the URL of the Linux root repository and specify the subsystem for analysis. (More details in [How to Use](#how-to-use))
@@ -31,35 +31,62 @@ The idea of generating a web display for Linux kernel version change impact anal
 
 To utilize this tool in your Linux environment (compatible with Ubuntu and Debian), follow these steps:
 
-Clone the repository:
+**Clone the repository**:
 
 ```bash
 git clone <repository_url>
 ```
 
-Navigate to the cloned repository:
+**Navigate to the cloned repository**:
 
 ```bash
 cd <repository_directory>
 ```
 
-Execute the tool by specifying the old and new tags:
+**Execute the tool by specifying the old and new tags**:
 
 ```bash
-./run_tool.sh <tag1> <tag2> [-c clone_path] [-u repo_link] [-s subsystem]
+./run_tool <tag1> <tag2> [-c clone_path] [-u repo_link] [-s subsystem]
 ```
 
-Example Usage:
+**Example Usage**:
+
 ```bash
-./run_tool.sh "v6.8" "v6.9" -c "linux-clone" -u "https://github.com/torvalds/linux" -s "security"
+./run_tool "v6.8" "v6.9" -c "linux-clone" -u "https://github.com/torvalds/linux" -s "security"
 # the tool will generate web update report on linux kernel v6.9 from v6.8 for security subsystem. 
 # the linux repository will be cloned during tool execution and will be cloned into a folder named linux-clone. 
 ```
+
+**Command Line Arguments**:
 - `<tag1>`: Specifies the old version tag.
 - `<tag2>`: Specifies the new version tag.
-- `-c <clone_path>`: Optional. Defines the user-specified path to clone the Linux source code repository.
-- `-u <repo_link>`: Optional. Provides the URL for the Linux source code repository.
-- `-s <subsystem>`: Optional. Specifies the subsystem for analysis (e.g., -s security).
+- `c <clone_name>`: Optional. Defines the user-specified repo name to clone the Linux source code repository. Default is linux-clone.
+- `u <repo_link>`: Optional. Provides the URL for the Linux source code repository.
+- `s <subsystem>`: Optional. Specifies the subsystem for analysis (e.g., -s security).
+
+**What the Tool Does**:
+- Clones the Linux repository from `repo_link`.
+- Copies `/delta-kernel/*` into `linux/scripts/change-impact-tools/`.
+- Clones the Linux repository into another repository named `clone_name`, defaulting to `linux-clone`.
+- Navigates to `linux-clone`:
+  - Checks out `tag1` and applies `fixdep-patch.file`.
+  - Configures and compiles the kernel.
+  - Collects compile-time source files list and dependency files list.
+  - Generates diff reports based on the file lists.
+  - Cleans up the working directory in `linux-clone`.
+  - Retrieves git metadata for each file inside the lists.
+  - Copies file lists, git diff reports, and git metadata (`build_data/`) to `/delta-kernel`.
+
+**Usage of `linux-clone`**:
+`delta-kernel` is assumed to be a directory located in `$K/scripts/change-impact-tools`. To avoid removing the `change-impact-tools/` directory while checking out different tags, linux-clone is created to simulate changes without affecting `change-impact-tools/``.
+
+**Clean Up (Optional)**:
+
+```bash
+rm -r linux
+rm -r linux-clone # or where you place the cloned dir
+rm -r build_data
+```
 
 ## Files Generated
 
@@ -90,9 +117,9 @@ The `scripts/basic/fixdep.c` file generates a `.cmd` file containing dependency 
 
 #### Source code
 
-This tool leverages the `$K/scripts/clang-tools/gen_compile_commands.py` script to generate a `compile_commands.json` file. This file documents all source files involved in the compilation process. The `gen_compile_commands.py` script traverses each `.cmd` file to aggregate the list of source files.
+This tool leverages the `$K/scripts/clang-tools/gen_compile_commands` script to generate a `compile_commands.json` file. This file documents all source files involved in the compilation process. The `gen_compile_commands` script traverses each `.cmd` file to aggregate the list of source files.
 
-Then, the tool invokes `parse_json.py` to parse `compile_commands.json`, generating **a list of source files**.
+Then, the tool invokes `parse_json` to parse `compile_commands.json`, generating **a list of source files**.
 
 ### II. Git Diff Report Generation
 

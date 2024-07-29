@@ -6,7 +6,7 @@
 set -e
 
 show_help() {
-    echo "Usage: ./generate_build_filelists.sh [tag1] [tag2]"
+    echo "Usage: ./generate_build_filelists [tag1] [tag2]"
     echo "Example: ./generate_rugenerate_build_filelists.h tag1 tag2 clone_path"
     echo
     echo "Options:"
@@ -83,11 +83,11 @@ export curr_dir
 
 clone_and_goto_cloned_repo "$CLONE_PATH"
 
-bash "$curr_dir"/build_scripts/build_collect_diff.sh "$TAG1" "$TAG2" "$SUBSYS"
+bash "$curr_dir"/build_scripts/build_collect_diff "$TAG1" "$TAG2" "$SUBSYS"
 echo "Finishing generating build source file lists"
 
 # Fetch email and name pairing information for linux contributor
-bash "$curr_dir"/build_scripts/git_shortlog.sh "$TAG2"
+bash "$curr_dir"/build_scripts/git_shortlog "$TAG2"
 display_file_head "$curr_dir/build_data" "name_list.txt" 3
 echo "finished generating email and name list"
 
@@ -107,8 +107,8 @@ display_file_head "$curr_dir/build_data" "filtered_diff_source_replace.txt" 3
 # Retrieve and tokenize commit info per added line
 echo "tokenizing each commit line ..."
 git checkout "$TAG2"
-python3 "$curr_dir"/build_scripts/tokenize.py "$curr_dir/build_data/filtered_diff_header.txt" "$curr_dir/build_data/tokenize_header.json" "$TAG1" "$TAG2"
-python3 "$curr_dir"/build_scripts/tokenize.py "$curr_dir/build_data/filtered_diff_source.txt" "$curr_dir/build_data/tokenize_source.json" "$TAG1" "$TAG2"
+./"$curr_dir"/build_scripts/tokenize "$curr_dir/build_data/filtered_diff_header.txt" "$curr_dir/build_data/tokenize_header.json" "$TAG1" "$TAG2"
+./"$curr_dir"/build_scripts/tokenize "$curr_dir/build_data/filtered_diff_source.txt" "$curr_dir/build_data/tokenize_source.json" "$TAG1" "$TAG2"
 display_file_head "$curr_dir/build_data" "tokenize_source.json" 3
 display_file_head "$curr_dir/build_data" "tokenize_header.json" 3
 echo "finished tokenization"
