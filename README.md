@@ -20,7 +20,7 @@ The diff report includes a subset of files from the Linux kernel repository that
 
 ## Innovation
 
-The idea of generating a web display for Linux kernel version change impact analysis is inspired by [Cregit](https://github.com/cregit/cregit). This tool innovates on Cregit by:
+The idea of generating a web display for Linux kernel version change impact analysis is inspired by [Cregit](https://github.com/cregit/cregit). This tool improves on Cregit by:
 
 - Considering the extensive code space the Linux kernel deals with, it provides a compile-time analysis instead of a static analysis of the commit history of the Linux kernel, presenting changes only in files used during compilation.
 - Generating not only web source files but also lists of all source files and dependencies/header files used in kernel compilation, facilitating additional analysis purposes. (More details in [Intermediate Files Generated](#intermediate-files-generated))
