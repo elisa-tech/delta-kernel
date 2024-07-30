@@ -3,7 +3,12 @@
 # Fetch name email information for linux kernel contributors
 set -e
 
+usage() {
+    echo "Usage: $0 tag"
+    exit 1
+}
 TAG="$1"
+[[ -z ${TAG} ]] && usage
 git checkout "$TAG"
 
 echo "Starting to generate the email name list ..."

@@ -18,16 +18,18 @@ install_package_safe() {
 # safely apply a patch to linux kernel
 apply_patch() {
     # shellcheck disable=SC2154
-    local patch_path="$root_path/scripts/change-impact-tools/fixdep-patch.file"
+    local patch_path="$kernel_repo_path/scripts/change-impact-tools/fixdep-patch.file"
 
     # Stash any changes if there is any
     if ! git diff --quiet; then
-        git stash
+        echo "linux-clone has unstashed change. Please stash them and run the script again."
+        exit 1
     fi
 
     # Abort `git am` only if there is a patch being applied
     if git am --show-current-patch &> /dev/null; then
-        git am --abort
+        echo "linux-clone has a patch being applied already. Should run git am --abort and try run the tool again."
+        exit 1
     fi
     echo "path check: $(pwd)"
     git apply < "$patch_path"
@@ -35,22 +37,21 @@ apply_patch() {
     echo "path check: $(pwd)"
 }
 
-# parse the JSON file
 parse_source_json_file() {
-    local python_path="$root_path/scripts/change-impact-tools/build_scripts/parse_json"
+    local python_path="$kernel_repo_path/scripts/change-impact-tools/build_scripts/parse_json"
     # shellcheck disable=SC2154
     local cloned_repo_name="/$clone_dir/"
-    local input_path="$root_path/scripts/change-impact-tools/build_data/compile_commands.json"
-    local output_path="$root_path/scripts/change-impact-tools/build_data/sourcefile.txt"
+    local input_path="$kernel_repo_path/scripts/change-impact-tools/build_data/compile_commands.json"
+    local output_path="$kernel_repo_path/scripts/change-impact-tools/build_data/sourcefile.txt"
 
     ./"$python_path" "$cloned_repo_name" "$input_path" "$output_path"
-    display_file_head "$root_path/scripts/change-impact-tools/build_data" "sourcefile.txt" 3
+    display_file_head "$kernel_repo_path/scripts/change-impact-tools/build_data" "sourcefile.txt" 3
 }
 
 # generate the build file list after building the kernel
 generate_compiled_file_lists() {
     # Generate compiled source files list
-    local json_output_path="$root_path/scripts/change-impact-tools/build_data/compile_commands.json"
+    local json_output_path="$kernel_repo_path/scripts/change-impact-tools/build_data/compile_commands.json"
     echo "path check: $(pwd)"
     ./scripts/clang-tools/gen_compile_commands -o "$json_output_path"
 
@@ -59,10 +60,10 @@ generate_compiled_file_lists() {
 
     # Generate compiled header files list
 
-    local output_list="$root_path/scripts/change-impact-tools/build_data/headerfile.txt"
-    local output_json="$root_path/scripts/change-impact-tools/build_data/source_dep.json"
+    local output_list="$kernel_repo_path/scripts/change-impact-tools/build_data/headerfile.txt"
+    local output_json="$kernel_repo_path/scripts/change-impact-tools/build_data/source_dep.json"
     local dep_path="dependency_file.txt"
-    local python_tool_path="$root_path/scripts/change-impact-tools/build_scripts/parse_dep_list"
+    local python_tool_path="$kernel_repo_path/scripts/change-impact-tools/build_scripts/parse_dep_list"
 
     ./"$python_tool_path" "$dep_path" "$output_json" "$output_list"
     echo "dependency compiled filelist generated to headerfile.txt$"
@@ -80,7 +81,7 @@ generate_git_diff() {
 
     # collect and setup input & output file
     file_type=${1:-source}
-    local root_build_data_path="$root_path/scripts/change-impact-tools/build_data"
+    local root_build_data_path="$kernel_repo_path/scripts/change-impact-tools/build_data"
     local diff_input="$root_build_data_path/sourcefile.txt"
     local diff_output="$root_build_data_path/filtered_diff_source.txt"
 
@@ -125,22 +126,22 @@ echo "build and collect kernel for subsystem: $SUBSYS"
 git fetch --tags
 echo "Generating source file list for $TAG1"
 git checkout "$TAG1"
+# Preparation before running make
+apply_patch
+install_package_safe
 echo "starting to run make olddefconfig"
 make olddefconfig
 echo "finished make olddefconfig"
 
 
-# Preparation before running make
-apply_patch
-install_package_safe
 
 # Build linux kernel
 echo "the current os-linux version: "
 cat /etc/os-release
 
 echo "start running make"
-make 
-echo "finished compile kernel using gcc 11"
+make -j $(nproc)
+echo "finished compile kernel"
 
 
 # Collect build metadata

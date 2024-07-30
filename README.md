@@ -22,14 +22,16 @@ The diff report includes a subset of files from the Linux kernel repository that
 
 The idea of generating a web display for Linux kernel version change impact analysis is inspired by [Cregit](https://github.com/cregit/cregit). This tool improves on Cregit by:
 
-- Considering the extensive code space the Linux kernel deals with, it provides a compile-time analysis instead of a static analysis of the commit history of the Linux kernel, presenting changes only in files used during compilation.
+- The tool performs a version analysis between two tags to identify updated files, similar to git diff, but focuses only on files used to compile the kernel rather than the entire Linux source code.
+
 - Generating not only web source files but also lists of all source files and dependencies/header files used in kernel compilation, facilitating additional analysis purposes. (More details in [Intermediate Files Generated](#intermediate-files-generated))
 - Enabling comparison between two specific tags/releases in the Linux kernel, highlighting all newly added and deleted lines. This provides a clear layout of differences between the tags. While Cregit organizes information by files and embeds the latest commit details in each line/token, it does not support direct comparison between two tags.
 - User customization: allows users to define the URL of the Linux kernel repository and specify the specific subsystem for analysis. (More details in [How to Use](#how-to-use))
+- Kernel Configuration: The linux kernel is configured with `make olddefconfig` in `build_scripts/build_collect_diff`: Updates the configuration using the existing `.config` file and applies default values for new options.
 
 ## How to use
 
-To utilize this tool in your Linux environment (compatible with Ubuntu and Debian), follow these steps:
+To utilize this tool in your Linux environment (tested successfully on `Ubuntu 22.04`), follow these steps:
 
 **Clone the repository**:
 
@@ -52,7 +54,7 @@ cd <repository_directory>
 **Example Usage**:
 
 ```bash
-./run_tool "v6.8" "v6.9" -c "linux-clone" -u "https://github.com/torvalds/linux" -s "security"
+./run_tool "v5.15" "v5.15.100" -c "linux-clone" -u "https://github.com/torvalds/linux" -s "security"
 # the tool will generate web update report on linux kernel v6.9 from v6.8 for security subsystem.
 cd web_source_code # click on index.html to view the result 
 ```

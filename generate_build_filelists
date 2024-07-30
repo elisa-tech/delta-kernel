@@ -21,21 +21,21 @@ clone_and_goto_cloned_repo() {
     clone_dir=${1:-"linux-clone"}
 
     # Capture the absolute path of the root directory
-    root_path=$(cd ../.. && pwd)
-    parent_root_path=$(cd ../../.. && pwd)
-    clone_root_path="$parent_root_path/$clone_dir"
-    echo "root_path: $root_path"
-    echo "clone root path: $clone_root_path"
-    export clone_root_path
-    export root_path
+    kernel_repo_path=$(cd ../.. && pwd)
+    parent_kernel_repo_path=$(cd ../../.. && pwd)
+    clone_kernel_repo_path="$parent_kernel_repo_path/$clone_dir"
+    echo "kernel_repo_path: $kernel_repo_path"
+    echo "clone root path: $clone_kernel_repo_path"
+    export clone_kernel_repo_path
+    export kernel_repo_path
     export clone_dir
 
-    mkdir -p "$clone_root_path"
+    mkdir -p "$clone_kernel_repo_path"
 
-    if [ ! -d "$clone_root_path/.git" ]; then
-        git clone "$root_path" "$clone_root_path"
+    if [ ! -d "$clone_kernel_repo_path/.git" ]; then
+        git clone "$kernel_repo_path" "$clone_kernel_repo_path"
     fi
-    cd "$clone_root_path" || exit
+    cd "$clone_kernel_repo_path" || exit
 }
 
 check_and_create_dir() {
