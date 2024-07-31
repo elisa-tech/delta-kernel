@@ -9,8 +9,8 @@ function show_help {
     echo "Example: ./generate_build_web_reports tag1 tag2 linux_url"
     echo
     echo "Options:"
-    echo "  tag1    Required: old_linux_version [e.g. v6.8]"
-    echo "  tag2    Required: new_linux_version [e.g. v6.9]"
+    echo "  tag1    Required: old_linux_version [e.g. v5.15]"
+    echo "  tag2    Required: new_linux_version [e.g. v5.15.100]"
     echo "  -h      Display this help message"
     exit 0
 }

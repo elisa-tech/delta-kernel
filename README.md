@@ -55,7 +55,7 @@ cd <repository_directory>
 
 ```bash
 ./run_tool "v5.15" "v5.15.100" -c "linux-clone" -u "https://github.com/torvalds/linux" -s "security"
-# the tool will generate web update report on linux kernel v6.9 from v6.8 for security subsystem.
+# the tool will generate web update report on linux kernel v5.15.100 from v5.15 for security subsystem.
 cd web_source_code # click on index.html to view the result 
 ```
 
