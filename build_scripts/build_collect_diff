@@ -65,7 +65,7 @@ generate_compiled_file_lists() {
     local dep_path="dependency_file.txt"
     local python_tool_path="$kernel_repo_path/scripts/change-impact-tools/build_scripts/parse_dep_list"
 
-    ./"$python_tool_path" "$dep_path" "$output_json" "$output_list"
+    "$python_tool_path" "$dep_path" "$output_json" "$output_list"
     echo "dependency compiled filelist generated to headerfile.txt$"
 
 }
