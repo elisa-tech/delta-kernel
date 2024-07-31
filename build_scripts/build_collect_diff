@@ -5,16 +5,6 @@
 
 set -e
 
-# check and install gcc-11 if not already installed
-install_package_safe() {
-    if ! command -v libssl-dev &> /dev/null; then
-        sudo apt-get update
-        sudo apt-get install -y libssl-dev
-    else
-        echo "libssl-dev is already installed."
-    fi
-}
-
 # safely apply a patch to linux kernel
 apply_patch() {
     # shellcheck disable=SC2154
@@ -128,9 +118,8 @@ echo "Generating source file list for $TAG1"
 git checkout "$TAG1"
 # Preparation before running make
 apply_patch
-install_package_safe
 echo "starting to run make olddefconfig"
-make olddefconfig
+make defconfig
 echo "finished make olddefconfig"
 
 
