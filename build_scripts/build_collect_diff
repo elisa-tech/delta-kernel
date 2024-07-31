@@ -53,7 +53,7 @@ generate_compiled_file_lists() {
     # Generate compiled source files list
     local json_output_path="$kernel_repo_path/scripts/change-impact-tools/build_data/compile_commands.json"
     echo "path check: $(pwd)"
-    ./scripts/clang-tools/gen_compile_commands -o "$json_output_path"
+    ./scripts/clang-tools/gen_compile_commands.py -o "$json_output_path"
 
     parse_source_json_file
     echo "source compiled filelist generated to sourcefile.txt"
