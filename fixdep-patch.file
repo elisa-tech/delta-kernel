@@ -1,0 +1,50 @@
+diff --git a/scripts/basic/fixdep.c b/scripts/basic/fixdep.c
+index 44e887cff49b..acf2b6b4c0b7 100644
+--- a/scripts/basic/fixdep.c
++++ b/scripts/basic/fixdep.c
+@@ -98,7 +98,7 @@
+ #include <stdlib.h>
+ #include <stdio.h>
+ #include <ctype.h>
+-
++FILE *build_dep_file;
+ static void usage(void)
+ {
+ 	fprintf(stderr, "Usage: fixdep <depfile> <target> <cmdline>\n");
+@@ -321,10 +321,15 @@ static void parse_dep_file(char *m, const char *target)
+ 					xprintf("source_%s := %s\n\n",
+ 						target, m);
+ 					xprintf("deps_%s := \\\n", target);
++					fprintf(build_dep_file, "source file := %s\n", m);
++					fprintf(build_dep_file, "dependency files :\n");
++
+ 				}
+ 				is_first_dep = 0;
+ 			} else {
+ 				xprintf("  %s \\\n", m);
++				fprintf(build_dep_file, "	%s\n", m);
++
+ 			}
+
+ 			buf = read_file(m);
+@@ -349,6 +354,7 @@ static void parse_dep_file(char *m, const char *target)
+
+ 	xprintf("\n%s: $(deps_%s)\n\n", target, target);
+ 	xprintf("$(deps_%s):\n", target);
++	fprintf(build_dep_file, "\n");
+ }
+
+ int main(int argc, char *argv[])
+@@ -364,7 +370,11 @@ int main(int argc, char *argv[])
+ 	cmdline = argv[3];
+
+ 	xprintf("cmd_%s := %s\n\n", target, cmdline);
+-
++	build_dep_file = fopen("dependency_file.txt", "a");
++    if (!build_dep_file) {
++        perror("fixdep: ./dependency_file.txt");
++        exit(1);
++    }
+ 	buf = read_file(depfile);
+ 	parse_dep_file(buf, target);
+ 	free(buf);

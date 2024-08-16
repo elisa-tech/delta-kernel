@@ -1,0 +1,148 @@
+#!/bin/bash
+#
+# Script to build the kernel, collect compiled file lists using modified kernel scripts,
+# and generate a git diff report based on the collected lists.
+
+set -e
+
+# safely apply a patch to linux kernel
+apply_patch() {
+    # shellcheck disable=SC2154
+    local patch_path="$curr_dir/fixdep-patch.file"
+
+    # Stash any changes if there is any
+    if ! git diff --quiet; then
+        echo "linux-clone has unstashed change. Please stash them and run the script again."
+        exit 1
+    fi
+
+    # Abort `git am` only if there is a patch being applied
+    if git am --show-current-patch &> /dev/null; then
+        echo "linux-clone has a patch being applied already. Should run git am --abort and try run the tool again."
+        exit 1
+    fi
+    echo "path check: $(pwd)"
+    git apply < "$patch_path"
+    echo "applied the git patch"
+    echo "path check: $(pwd)"
+}
+
+parse_source_json_file() {
+    local python_path="$curr_dir/build_scripts/parse_json"
+    # shellcheck disable=SC2154
+    local cloned_repo_name="/$CLONE_PATH/"
+    local input_path="$curr_dir/build_data/compile_commands.json"
+    local output_path="$curr_dir/build_data/sourcefile.txt"
+
+    "$python_path" "$cloned_repo_name" "$input_path" "$output_path"
+    display_file_head "$curr_dir/build_data" "sourcefile.txt" 3
+}
+
+# generate the build file list after building the kernel
+generate_compiled_file_lists() {
+    # Generate compiled source files list
+    local json_output_path="$curr_dir/build_data/compile_commands.json"
+    echo "path check: $(pwd)"
+    ./scripts/clang-tools/gen_compile_commands.py -o "$json_output_path"
+
+    parse_source_json_file
+    echo "source compiled filelist generated to sourcefile.txt"
+
+    # Generate compiled header files list
+
+    local output_list="$curr_dir/build_data/headerfile.txt"
+    local output_json="$curr_dir/build_data/source_dep.json"
+    local dep_path="dependency_file.txt"
+    local python_tool_path="$curr_dir/build_scripts/parse_dep_list"
+
+    "$python_tool_path" "$dep_path" "$output_json" "$output_list"
+    echo "dependency compiled filelist generated to headerfile.txt$"
+
+}
+
+# clean up the working directory in linux-clone
+cleanup_working_directory() {
+    git reset --hard
+    git clean -fdx
+}
+
+# generate diff for build between TAG1 and TAG2
+generate_git_diff() {
+
+    # collect and setup input & output file
+    file_type=${1:-source}
+    local root_build_data_path="$curr_dir/build_data"
+    local diff_input="$root_build_data_path/sourcefile.txt"
+    local diff_output="$root_build_data_path/filtered_diff_source.txt"
+
+    if [ "$file_type" = "header" ]; then
+        echo "[generate_git_diff] Generating dependency git diff report ..."
+        diff_input="$root_build_data_path/headerfile.txt"
+        diff_output="$root_build_data_path/filtered_diff_header.txt"
+    else
+        echo "[generate_git_diff] Generating source git diff report ..."
+    fi
+    echo "parsing for subsys: $SUBSYS"
+    while IFS= read -r file
+    do
+        if [[ "$file" == $SUBSYS/* ]]; then
+            echo "now generating git diff for $file"
+            if git show "$TAG2:$file" &> /dev/null; then
+                local diff_result
+                echo "$file suitable for parse"
+                diff_result=$(git diff "$TAG1" "$TAG2" -- "$file")
+                if [[ -n "$diff_result" ]]; then
+                    {
+                        echo "Diff for $file"
+                        echo "$diff_result"
+                        echo ""
+                    } >> "$diff_output"
+
+                fi
+            fi
+        fi
+    done < "$diff_input"
+    echo "[generate_git_diff] Git diff report for $file_type files save to compiled_data"
+
+}
+
+
+TAG1="$1"
+TAG2="$2"
+SUBSYS="$3"
+
+# Clean up the working directory
+cleanup_working_directory
+
+echo "build and collect kernel for subsystem: $SUBSYS"
+
+# Fetch tags from the repository
+git fetch --tags
+echo "Generating source file list for $TAG1"
+git checkout "$TAG1"
+# Preparation before running make
+apply_patch
+echo "starting to run make olddefconfig"
+make defconfig
+echo "finished make olddefconfig"
+
+
+
+# Build linux kernel
+echo "the current os-linux version: "
+cat /etc/os-release
+
+echo "start running make"
+make -j $(( $(nproc) * 2 ))
+echo "finished compile kernel"
+
+
+# Collect build metadata
+echo "starting on preparing compiled file list"
+generate_compiled_file_lists
+
+# Generate git diff report
+echo "starting on generating git diff report on source"
+generate_git_diff source
+echo "starting on generating git diff report on header"
+generate_git_diff header

@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="keywords" content="Git, Diff, Source Code, Changes">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        h2 {
+            color: #333;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        .diff {
+            white-space: pre;
+            font-family: monospace;
+        }
+
+        .diff-added {
+            background-color: #e6ffed;
+            position: relative; /* Ensure the hover-box positions relative to the .diff-added element */
+        }
+
+        .diff-added:hover .hover-box {
+            display: block; /* Show hover box on hover */
+        }
+
+        .diff-removed {
+            background-color: #ffecec;
+        }
+        .highlight {
+            background-color: #ffffcc;
+        }
+        .toggle-btn {
+            cursor: pointer;
+        }
+        .line_tag {
+            background-color: #ffffcc;
+            border-radius: 5px;
+            padding: 2px 4px;
+            text-decoration: none;
+            color: #333;
+        }
+        .line_tag:hover {
+            background-color: #fff8b3;
+        }
+        .hover-box {
+            display: none;
+            position: absolute;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            padding: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+            white-space: normal;
+        }
+        .toggle-btn {
+            cursor: pointer;
+            font-size: 18px;
+            border: none;
+            background: none;
+            margin-left: 10px;
+        }
+        .triangle {
+            display: inline-block;
+            width: 0;
+            height: 0;
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+        }
+        .triangle-down {
+            border-top: 10px solid #333;
+        }
+        .triangle-up {
+            border-bottom: 10px solid #333;
+            margin-top: 3px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Linux Kernel Git Diff Report</h2>
+    <p id="comparison-tags"></p>
+    <button onclick="uncollapseAll()">Uncollapse All</button>
+    <button onclick="collapseAll()">Collapse All</button>
+    <button onclick="window.print()">Print PDF</button>
+    <table id="diffTable">
+        <thead>
+            <tr>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Diff rows will be added here by JavaScript -->
+        </tbody>
+    </table>
+
+
+    <script type="text/javascript" src="header_data.js"></script>
+    <script type="text/javascript" src="git_diff_header.js"></script>
+    <script type="text/javascript" src="source_data.js"></script>
+    <script type="text/javascript" src="git_diff_source.js"></script>
+    <script type="text/javascript" src="versions.js"></script>
+
+
+    <script>
+            document.addEventListener("DOMContentLoaded", function() {
+            // tag1, tag2, repo_type, and root_linux_url defined in versions.js
+            if (tag1 && tag2) {
+                if(repo_type == "github") {
+                    document.getElementById("comparison-tags").innerHTML = `Comparing tags <a href="${root_linux_url}/tree/${tag1}">${tag1}</a> and <a href="${root_linux_url}/tree/${tag2}">${tag2}</a> in the <a href="${root_linux_url}">linux source code repository</a>.`;
+                } else {
+                    document.getElementById("comparison-tags").innerHTML = `Comparing tags <a href="${root_linux_url}/-/tree/${tag1}">${tag1}</a> and <a href="${root_linux_url}/-/tree/${tag2}">${tag2}</a> in the <a href="${root_linux_url}">linux source code repository</a>.`;
+                }
+            } else {
+                console.error("tag1 or tag2 is not defined");
+            }
+        });
+        let commit_base_url;
+        if(repo_type == "github") {
+            commit_base_url = `${root_linux_url}/commit/`;
+        } else {
+            commit_base_url = `${root_linux_url}/-/commit/`;
+
+        }
+
+        function parseDiff(diff) {
+            const diffLines = diff.split('\n');
+            const result = [];
+            let currentFile = null;
+
+            diffLines.forEach(line => {
+                const fileMatch = line.match(/^Diff for (.+)$/);
+                if (fileMatch) {
+                    if (currentFile) {
+                        result.push(currentFile);
+                    }
+                    currentFile = { fileName: fileMatch[1], changes: '', fileMeta: [] };
+                } else if (currentFile) {
+                    const match = line.match(/^@@ -(\d+),(\d+) \+(\d+),(\d+) @@/);
+                    if (match) {
+                        const n1 = parseInt(match[1]);
+                        const n2 = parseInt(match[2]);
+                        const n3 = parseInt(match[3]);
+                        const n4 = parseInt(match[4]);
+                        currentFile.fileMeta.push([n1, n2, n3, n4]);
+                    }
+                    currentFile.changes += line + '\n';
+                }
+            });
+
+            if (currentFile) {
+                result.push(currentFile);
+            }
+
+            return result;
+        }
+
+        function sanitizeId(id) {
+            return id.replace(/[^a-zA-Z0-9_\-]/g, '_');
+        }
+
+        function renderDiffs(diffs) {
+            const tableBody = document.getElementById('diffTable').getElementsByTagName('tbody')[0];
+            const subsystems = {};
+
+            // Organize diffs by subsystem
+            diffs.forEach(diff => {
+                const subsystem = diff.fileName.split('/')[0];
+                if (!subsystems[subsystem]) {
+                    subsystems[subsystem] = [];
+                }
+                subsystems[subsystem].push(diff);
+            });
+
+            let subsystem_count = 0;
+
+            // Render each subsystem
+            Object.keys(subsystems).forEach(subsystem => {
+                let file_count = 0;
+                const headerRow = document.createElement('tr');
+                const headerCell = document.createElement('td');
+                headerCell.colSpan = 2;
+                headerCell.innerHTML = `<strong>${subsystem}</strong> <button class="toggle-btn" onclick="toggleSubsystem('${sanitizeId(subsystem)}')"><span class="triangle triangle-down"></span></button>`;
+                headerRow.appendChild(headerCell);
+                tableBody.appendChild(headerRow);
+                subsystems[subsystem].sort((a, b) => a.fileName.localeCompare(b.fileName));
+
+                // Create a container for subsystem diffs
+                const subsystemContainer = document.createElement('tbody');
+                subsystemContainer.id = `subsystem-${sanitizeId(subsystem)}`;
+                subsystemContainer.style.display = 'none';
+
+                subsystems[subsystem].forEach(diff => {
+                    const fileId = sanitizeId(diff.fileName);
+                    const fileRow = document.createElement('tr');
+                    const fileCell = document.createElement('td');
+                    fileCell.colSpan = 2;
+
+                    // Extract GitHub URL for the file
+                    let fileUrl;
+                    if (repo_type == "gitlab") {
+                        fileUrl = `${root_linux_url}/-/blob/${tag2}/${diff.fileName}`;
+                    } else {
+                        fileUrl = `${root_linux_url}/blob/${tag2}/${diff.fileName}`;
+                    }
+                    // Update the file row with URL
+                    fileCell.innerHTML = `
+                        <strong>${diff.fileName}</strong>
+                        <a href="${fileUrl}" target="_blank" class="file-link">Link</a>
+                        <button class="toggle-btn" onclick="toggleFile('${fileId}')">
+                            <span class="triangle triangle-down"></span>
+                        </button>
+                    `;
+                    fileRow.appendChild(fileCell);
+                    subsystemContainer.appendChild(fileRow);
+
+                    // Create a container for file diffs
+                    const fileContainer = document.createElement('tbody');
+                    fileContainer.id = `file-${fileId}`;
+                    fileContainer.style.display = 'none';
+                    fileContainer.dataset.subsystem = sanitizeId(subsystem);
+
+                    const row = document.createElement('tr');
+                    const changesCell = document.createElement('td');
+                    let file_meta_count = 0;
+                    let file_meta = diff.fileMeta;
+                    let file_count1 = file_meta[file_meta_count][0] - 1;
+                    let file_count2 = file_meta[file_meta_count][2] - 1;
+                    let line_tag_max = Math.max(
+                        String(file_count1 + file_meta[file_meta_count][1]).length,
+                        String(file_count2 + file_meta[file_meta_count][3]).length
+                    );
+                    let set_line_tag = false;
+
+                    const lines = diff.changes.split('\n');
+                    let processedLines = lines.map((line, index) => {
+                        if (line.startsWith('@@')) {
+                            file_count1 = file_meta[file_meta_count][0] - 1;
+                            file_count2 = file_meta[file_meta_count][2] - 1;
+                            line_tag_max = Math.max(
+                                String(file_count1 + file_meta[file_meta_count][1]).length,
+                                String(file_count2 + file_meta[file_meta_count][3]).length
+                            );
+                            file_meta_count++;
+                            set_line_tag = true;
+                            return line;
+                        } else if (line.startsWith('-') && !line.startsWith('---')) {
+                            file_count1++;
+                            let line_tag = `${subsystem_count}-${file_count}-a-${file_count1}`;
+                            let paddingLength = Math.max(0, line_tag_max - String(file_count1).length);
+                            let padding = ' '.repeat(paddingLength);
+                            let paddedCountStr = String(file_count1) + padding;
+                            return `<a id="${line_tag}" class="line_tag" href="#${line_tag}">[${paddedCountStr}]</a><span class="diff-removed">${escapeHtml(line)}</span>`;
+                        } else if (line.startsWith('+') && !line.startsWith('+++')) {
+                            const content = line.trim().slice(1).trim();
+                            const dif = diff.fileName;
+                            file_count2++;
+                            let line_tag = `${subsystem_count}-${file_count}-b-${file_count2}`;
+                            let paddingLength = Math.max(0, line_tag_max - String(file_count2).length);
+                            let padding = ' '.repeat(paddingLength);
+                            let paddedCountStr = String(file_count2) + padding;
+
+                            // Check if token_data is defined and contains the required elements
+                            if (token_data[diff.fileName] && token_data[diff.fileName][String(file_count2)]) {
+                                const token_root = token_data[dif][String(file_count2)]["root_line"];
+                                const tokens = token_data[dif][String(file_count2)]["tokenization"];
+
+                                let tokenized_line = `<a id="${line_tag}" class="line_tag" href="#${line_tag}">[${paddedCountStr}]</a>`;
+
+                                // Check if tokens is an array and has elements
+                                if (Array.isArray(tokens) && tokens.length > 0) {
+                                    for (let i = 0; i < tokens.length; i++) {
+                                        let metadata = tokens[i]["meta"];
+                                        let commit_url = commit_base_url + escapeHtml(metadata.commit_hash);
+                                        const hoverBox = `<div class="hover-box">
+                                                            <strong>Author:</strong> ${escapeHtml(metadata.author_name)}<br>
+                                                            <strong>Commit Hash:</strong> ${escapeHtml(metadata.commit_hash)}<br>
+                                                            <strong>Email:</strong> ${escapeHtml(metadata.email)}<br>
+                                                            <strong>Time:</strong> ${escapeHtml(metadata.time)}
+                                                            </div>`;
+                                        let tokenLine = tokens[i]["token"];
+                                        if (token_data[dif][String(file_count2)]["root_line"] == "" && token_data[dif][String(file_count2)]["tokenization"].length == 1) {
+                                            tokenLine = escapeHtml(line);
+                                        }
+                                        tokenized_line += `<a href="${commit_url}" class="diff-added">${escapeHtml(tokenLine)}${hoverBox}</a>`;
+
+                                    }
+                                } else {
+                                    // Handle the case where tokens is not an array or is empty
+                                    tokenized_line += escapeHtml(line);
+                                }
+                                return tokenized_line;
+                            } else {
+                                // Handle the case where token_data or the specific tokens are missing
+                                return escapeHtml(line);
+                            }
+                        } else {
+                            if (set_line_tag && !(index === lines.length - 1)) {
+                                file_count1++;
+                                file_count2++;
+                                let paddingLength = Math.max(0, line_tag_max - String(file_count2).length);
+                                let padding = ' '.repeat(paddingLength);
+                                let paddedCountStr = String(file_count2) + padding;
+                                let line_tag = `${subsystem_count}-${file_count}-b-${file_count2}`;
+                                return `<a id="${line_tag}" class="line_tag" href="#${line_tag}">[${escapeHtml(paddedCountStr)}]</a>${escapeHtml(line)}`;
+                            }
+                            return escapeHtml(line);
+                        }
+                    });
+                    file_count++;
+
+                    changesCell.innerHTML = `<pre class="diff">${processedLines.join('\n').replace(/(^|\s)(mm|fs)(\s|$)/g, match => `<span class="highlight">${match}</span>`)}</pre>`;
+
+                    row.appendChild(changesCell);
+                    fileContainer.appendChild(row);
+                    subsystemContainer.appendChild(fileContainer);
+                });
+                subsystem_count++;
+
+                tableBody.appendChild(subsystemContainer);
+            });
+
+            // Open the toggle lists if the anchor is present in the URL
+            openTogglesForAnchor();
+
+        }
+
+        function openTogglesForAnchor() {
+            const hash = window.location.hash.substring(1);
+            if (hash) {
+                const lineTagElement = document.getElementById(hash);
+                if (lineTagElement) {
+                    const fileContainer = lineTagElement.closest('tbody[id^="file-"]');
+                    if (fileContainer) {
+                        const subsystemId = fileContainer.dataset.subsystem;
+                        const fileId = fileContainer.id;
+
+                        // Open the subsystem toggle if it's closed
+                        toggleSubsystem(subsystemId);
+
+                        // Open the file toggle if it's closed
+                        toggleFile(fileId.replace('file-', ''));
+                    }
+                }
+            }
+        }
+
+        // Helper function to toggle the display of subsystems
+        function toggleSubsystem(subsystem) {
+            const container = document.getElementById(`subsystem-${sanitizeId(subsystem)}`);
+            if (container) {
+                const button = container.previousElementSibling.querySelector('.toggle-btn');
+                const triangle = button.querySelector('.triangle');
+                if (container.style.display === 'none') {
+                    container.style.display = '';
+                    triangle.classList.remove('triangle-down');
+                    triangle.classList.add('triangle-up');
+                    button.setAttribute('aria-expanded', 'true');
+                } else {
+                    container.style.display = 'none';
+                    triangle.classList.remove('triangle-up');
+                    triangle.classList.add('triangle-down');
+                    button.setAttribute('aria-expanded', 'false');
+                }
+            } else {
+                console.error(`Subsystem container for ${subsystem} not found.`);
+            }
+        }
+
+        // Helper function to toggle the display of files
+        function toggleFile(fileName) {
+            const container = document.getElementById(`file-${sanitizeId(fileName)}`);
+            if (container) {
+                const button = container.previousElementSibling.querySelector('.toggle-btn');
+                const triangle = button.querySelector('.triangle');
+                if (container.style.display === 'none') {
+                    container.style.display = '';
+                    triangle.classList.remove('triangle-down');
+                    triangle.classList.add('triangle-up');
+                    button.setAttribute('aria-expanded', 'true');
+                } else {
+                    container.style.display = 'none';
+                    triangle.classList.remove('triangle-up');
+                    triangle.classList.add('triangle-down');
+                    button.setAttribute('aria-expanded', 'false');
+                }
+            } else {
+                console.error(`File container for ${fileName} not found.`);
+            }
+        }
+
+        function escapeHtml(html) {
+            const escapeMap = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            };
+            return html.replace(/[&<>"']/g, match => escapeMap[match]);
+        }
+
+        function uncollapseAll() {
+            const subsystems = document.querySelectorAll('[id^="subsystem-"]');
+            subsystems.forEach(subsystem => {
+                subsystem.style.display = '';
+                const button = subsystem.previousElementSibling.querySelector('.toggle-btn');
+                const triangle = button.querySelector('.triangle');
+                triangle.classList.remove('triangle-down');
+                triangle.classList.add('triangle-up');
+                button.setAttribute('aria-expanded', 'true');
+            });
+
+            const files = document.querySelectorAll('[id^="file-"]');
+            files.forEach(file => {
+                file.style.display = '';
+                const button = file.previousElementSibling.querySelector('.toggle-btn');
+                const triangle = button.querySelector('.triangle');
+                triangle.classList.remove('triangle-down');
+                triangle.classList.add('triangle-up');
+                button.setAttribute('aria-expanded', 'true');
+            });
+        }
+
+        function collapseAll() {
+            const subsystems = document.querySelectorAll('[id^="subsystem-"]');
+            subsystems.forEach(subsystem => {
+                subsystem.style.display = 'none';
+                const button = subsystem.previousElementSibling.querySelector('.toggle-btn');
+                const triangle = button.querySelector('.triangle');
+                triangle.classList.remove('triangle-up');
+                triangle.classList.add('triangle-down');
+                button.setAttribute('aria-expanded', 'false');
+            });
+
+            const files = document.querySelectorAll('[id^="file-"]');
+            files.forEach(file => {
+                file.style.display = 'none';
+                const button = file.previousElementSibling.querySelector('.toggle-btn');
+                const triangle = button.querySelector('.triangle');
+                triangle.classList.remove('triangle-up');
+                triangle.classList.add('triangle-down');
+                button.setAttribute('aria-expanded', 'false');
+            });
+        }
+
+        token_data = Object.assign({}, token_data_source, token_data_header);
+        diffs = `${diffs_header}
+        ${diffs_source}`;
+
+
+
+        const parsedDiffs = parseDiff(diffs);
+        renderDiffs(parsedDiffs);
+    </script>
+
+
+</body>
+</html>
